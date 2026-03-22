@@ -13,15 +13,19 @@
     text-align: center;
   }
 
+  h2 {
+    margin: 10px 0;
+  }
+
   #controls {
-    margin: 10px;
+    margin-bottom: 10px;
   }
 
   #game {
     position: relative;
-    width: 800px;
-    height: 500px;
-    margin: 10px auto;
+    width: 1000px;
+    height: 650px;
+    margin: auto;
     background: #222;
     overflow: hidden;
     border: 2px solid #0f0;
@@ -67,6 +71,7 @@
     <option value="2">Map 2 (Floating Platforms)</option>
     <option value="3">Map 3 (Maze)</option>
   </select>
+
   Time: <span id="timer">90</span>s
 </div>
 
@@ -79,7 +84,6 @@
   <div id="label2" class="tag-label"></div>
   <div id="label3" class="tag-label"></div>
 
-  <!-- Dynamic terrain container -->
   <div id="terrain"></div>
 </div>
 
@@ -88,17 +92,27 @@ const game = document.getElementById("game");
 const terrain = document.getElementById("terrain");
 
 let players = {
-  p1: {x:100,y:400,vx:0,vy:0},
-  p2: {x:300,y:400,vx:0,vy:0},
-  p3: {x:500,y:400,vx:0,vy:0}
+  p1: {x:100,y:500,vx:0,vy:0},
+  p2: {x:300,y:500,vx:0,vy:0},
+  p3: {x:500,y:500,vx:0,vy:0}
 };
 
-let gravity = 0.5;
+let gravity = 0.6;
+let jumpPower = -13; // 🔼 stronger jump
 let keys = {};
 let tagger = "p1";
 
-document.addEventListener("keydown", e => keys[e.key.toLowerCase()] = true);
-document.addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
+// ✅ Prevent arrow key scrolling
+document.addEventListener("keydown", e => {
+  if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.key)) {
+    e.preventDefault();
+  }
+  keys[e.key.toLowerCase()] = true;
+});
+
+document.addEventListener("keyup", e => {
+  keys[e.key.toLowerCase()] = false;
+});
 
 // ---------------- MAPS ----------------
 
@@ -108,46 +122,49 @@ function loadMap() {
 
   if (map === "1") {
     terrain.innerHTML = `
-      <div class="platform" style="width:200px;height:10px;left:100px;top:300px;"></div>
-      <div class="platform" style="width:200px;height:10px;left:400px;top:200px;"></div>
+      <div class="platform" style="width:300px;height:12px;left:100px;top:400px;"></div>
+      <div class="platform" style="width:300px;height:12px;left:500px;top:300px;"></div>
     `;
   }
 
   if (map === "2") {
     terrain.innerHTML = `
-      <div class="platform" style="width:150px;height:10px;left:100px;top:350px;"></div>
-      <div class="platform" style="width:150px;height:10px;left:300px;top:250px;"></div>
-      <div class="platform" style="width:150px;height:10px;left:500px;top:150px;"></div>
+      <div class="platform" style="width:200px;height:12px;left:100px;top:450px;"></div>
+      <div class="platform" style="width:200px;height:12px;left:350px;top:350px;"></div>
+      <div class="platform" style="width:200px;height:12px;left:600px;top:250px;"></div>
     `;
   }
 
   if (map === "3") {
     terrain.innerHTML = `
-      <div class="wall" style="width:20px;height:300px;left:200px;top:100px;"></div>
-      <div class="wall" style="width:20px;height:300px;left:500px;top:100px;"></div>
-      <div class="platform" style="width:200px;height:10px;left:300px;top:200px;"></div>
+      <div class="wall" style="width:30px;height:400px;left:250px;top:200px;"></div>
+      <div class="wall" style="width:30px;height:400px;left:650px;top:200px;"></div>
+      <div class="platform" style="width:300px;height:12px;left:350px;top:350px;"></div>
     `;
   }
 
-  // reset players
-  players.p1.x = 100; players.p1.y = 400;
-  players.p2.x = 300; players.p2.y = 400;
-  players.p3.x = 500; players.p3.y = 400;
+  resetPlayers();
+}
+
+function resetPlayers() {
+  players.p1 = {x:100,y:500,vx:0,vy:0};
+  players.p2 = {x:300,y:500,vx:0,vy:0};
+  players.p3 = {x:500,y:500,vx:0,vy:0};
 }
 
 loadMap();
 
-// ---------------- GAME LOGIC ----------------
+// ---------------- MOVEMENT ----------------
 
 function movePlayer(id, left, right, jump) {
   let p = players[id];
 
-  if (keys[left]) p.vx = -3;
-  else if (keys[right]) p.vx = 3;
+  if (keys[left]) p.vx = -4;
+  else if (keys[right]) p.vx = 4;
   else p.vx *= 0.8;
 
-  if (keys[jump] && p.y >= 400) {
-    p.vy = -10;
+  if (keys[jump] && p.y >= 500) {
+    p.vy = jumpPower;
   }
 }
 
@@ -156,14 +173,16 @@ function applyPhysics(p) {
   p.x += p.vx;
   p.y += p.vy;
 
-  if (p.y > 400) {
-    p.y = 400;
+  if (p.y > 500) {
+    p.y = 500;
     p.vy = 0;
   }
 
   if (p.x < 0) p.x = 0;
-  if (p.x > 780) p.x = 780;
+  if (p.x > 980) p.x = 980;
 }
+
+// ---------------- TAG SYSTEM ----------------
 
 function checkTag() {
   let ids = Object.keys(players);
@@ -174,8 +193,11 @@ function checkTag() {
         let pa = players[a];
         let pb = players[b];
 
-        if (Math.abs(pa.x - pb.x) < 20 && Math.abs(pa.y - pb.y) < 20) {
-          tagger = a;
+        // ✅ Only the IT player can tag others
+        if (a === tagger) {
+          if (Math.abs(pa.x - pb.x) < 25 && Math.abs(pa.y - pb.y) < 25) {
+            tagger = b;
+          }
         }
       }
     });
@@ -192,6 +214,8 @@ function updateLabels() {
     label.style.top = players[id].y + "px";
   });
 }
+
+// ---------------- GAME LOOP ----------------
 
 function update() {
   movePlayer("p1","a","d","w");
@@ -220,16 +244,16 @@ update();
 // ---------------- TIMER ----------------
 
 let time = 90;
+
 setInterval(() => {
   time--;
   document.getElementById("timer").textContent = time;
 
   if (time <= 0) {
-    alert("Game Over! Last tagged (IT) player loses: " + tagger.toUpperCase());
+    alert("Game Over! Last tagged (IT) loses: " + tagger.toUpperCase());
     location.reload();
   }
 }, 1000);
-
 </script>
 
 </body>
