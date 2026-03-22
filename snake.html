@@ -47,44 +47,34 @@
     let score = 0;
 
     function drawSnake() {
-      ctx.fillStyle = '#00FF00'; // bright green snake
+      ctx.fillStyle = '#00FF00';
       for (let segment of snake) {
         ctx.fillRect(segment.x, segment.y, scale, scale);
       }
     }
 
     function drawFood() {
-      ctx.fillStyle = '#FF0000'; // red food
+      ctx.fillStyle = '#FF0000';
       ctx.fillRect(food.x, food.y, scale, scale);
     }
 
     function update() {
-      if (!direction) return; // wait for key press to start
+      if (!direction) return;
 
       let head = { ...snake[0] };
 
       switch (direction) {
-        case 'LEFT':
-          head.x -= scale;
-          break;
-        case 'RIGHT':
-          head.x += scale;
-          break;
-        case 'UP':
-          head.y -= scale;
-          break;
-        case 'DOWN':
-          head.y += scale;
-          break;
+        case 'LEFT': head.x -= scale; break;
+        case 'RIGHT': head.x += scale; break;
+        case 'UP': head.y -= scale; break;
+        case 'DOWN': head.y += scale; break;
       }
 
-      // Wrap around edges
       if (head.x < 0) head.x = canvas.width - scale;
       else if (head.x >= canvas.width) head.x = 0;
       if (head.y < 0) head.y = canvas.height - scale;
       else if (head.y >= canvas.height) head.y = 0;
 
-      // Check collision with self
       for (let segment of snake) {
         if (head.x === segment.x && head.y === segment.y) {
           alert('Game Over! Your score: ' + score);
@@ -101,7 +91,6 @@
 
       snake.unshift(head);
 
-      // Check if food eaten
       if (head.x === food.x && head.y === food.y) {
         score++;
         food = {
@@ -117,7 +106,6 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       drawSnake();
       drawFood();
-
       ctx.fillStyle = '#fff';
       ctx.font = '20px Arial';
       ctx.fillText('Score: ' + score, 10, 25);
