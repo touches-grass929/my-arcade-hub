@@ -4,52 +4,101 @@
   <meta charset="UTF-8" />
   <title>My Arcade Hub</title>
   <style>
-    body { background:#222; color:#eee; font-family:Arial,sans-serif; margin:0; padding:0; display:flex; flex-direction:column; align-items:center; }
-    header { background:#111; width:100%; padding:15px; text-align:center; font-size:24px; font-weight:bold; border-bottom:2px solid #0f0; }
-    main { margin-top:20px; display:flex; flex-direction:column; align-items:center; gap:15px; width:90%; max-width:700px; }
-    button { background:#0f0; border:none; padding:12px 20px; font-size:18px; font-weight:bold; border-radius:6px; cursor:pointer; transition: background 0.3s ease; width:200px; }
+    body {
+      background:#222;
+      color:#eee;
+      font-family:Arial,sans-serif;
+      margin:0;
+      padding:0;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+    }
+    header {
+      background:#111;
+      width:100%;
+      padding:15px;
+      text-align:center;
+      font-size:24px;
+      font-weight:bold;
+      border-bottom:2px solid #0f0;
+    }
+    main {
+      margin-top:20px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:15px;
+      width:90%;
+      max-width:700px;
+    }
+    button {
+      background:#0f0;
+      border:none;
+      padding:12px 20px;
+      font-size:18px;
+      font-weight:bold;
+      border-radius:6px;
+      cursor:pointer;
+      width:220px;
+    }
     button:hover { background:#0c0; }
-    iframe { margin-top:20px; border:2px solid #0f0; width:600px; height:420px; background:#000; border-radius:8px; }
+
+    iframe {
+      margin-top:20px;
+      border:2px solid #0f0;
+      width:600px;
+      height:420px;
+      background:#000;
+      border-radius:8px;
+    }
+
     #games { display:none; }
   </style>
 </head>
 <body>
-  <header>My Arcade Hub 🎮</header>
 
-  <main>
-    <!-- Password form -->
-    <div id="passwordDiv">
-      <p>Enter password to access the arcade:</p>
-      <input type="password" id="passwordInput" placeholder="Password"/>
-      <button onclick="checkPassword()">Enter</button>
-      <p id="errorMsg" style="color:red; display:none;">Wrong password!</p>
-    </div>
+<header>My Arcade Hub 🎮</header>
 
-    <!-- Games area -->
-    <div id="games">
-      <button onclick="loadGame('snake.html')">Play Snake</button>
-      <button onclick="loadGame('pong.html')">Play Pong</button>
-      <iframe id="gameFrame" src="" title="Game Frame"></iframe>
-    </div>
-  </main>
+<main>
 
-  <script>
-    const correctPassword = "google"; // <-- change this to whatever you want
+  <!-- 🔐 Password Screen -->
+  <div id="passwordDiv">
+    <p>Enter password to access the arcade:</p>
+    <input type="password" id="passwordInput" placeholder="Password">
+    <button onclick="checkPassword()">Enter</button>
+    <p id="errorMsg" style="color:red; display:none;">Wrong password!</p>
+  </div>
 
-    function checkPassword() {
-      const input = document.getElementById('passwordInput').value;
-      const errorMsg = document.getElementById('errorMsg');
-      if(input === correctPassword){
-        document.getElementById('passwordDiv').style.display = 'none';
-        document.getElementById('games').style.display = 'flex';
-      } else {
-        errorMsg.style.display = 'block';
-      }
+  <!-- 🎮 Games -->
+  <div id="games">
+    <button onclick="loadGame('snake.html')">Play Snake</button>
+    <button onclick="loadGame('pong.html')">Play Pong</button>
+    <button onclick="loadGame('tictactoe.html')">Play Tic Tac Toe</button>
+
+    <iframe id="gameFrame" src=""></iframe>
+  </div>
+
+</main>
+
+<script>
+  const correctPassword = "1234"; // 🔑 CHANGE THIS PASSWORD
+
+  function checkPassword() {
+    const input = document.getElementById("passwordInput").value;
+
+    if (input === correctPassword) {
+      document.getElementById("passwordDiv").style.display = "none";
+      document.getElementById("games").style.display = "flex";
+    } else {
+      document.getElementById("errorMsg").style.display = "block";
     }
+  }
 
-    function loadGame(game){
-      document.getElementById('gameFrame').src = game;
-    }
-  </script>
+  function loadGame(game) {
+    document.getElementById("gameFrame").src = game;
+  }
+</script>
+
 </body>
 </html>
