@@ -96,10 +96,10 @@
       margin-top:20px;
       border:2px solid #0f0;
       width:100%;
-      max-width:700px;
-      height:420px;
+      max-width:800px;
+      height:500px;
       background:#000;
-      border-radius:8px;
+      border-radius:10px;
     }
 
     #games {
@@ -107,6 +107,10 @@
       flex-direction:column;
       align-items:center;
       width:100%;
+    }
+
+    .controls {
+      margin-top:10px;
     }
 
   </style>
@@ -153,6 +157,11 @@
 
     </div>
 
+    <!-- Controls -->
+    <div class="controls">
+      <button onclick="goHome()">Back to Menu</button>
+    </div>
+
     <iframe id="gameFrame" src=""></iframe>
 
   </div>
@@ -160,21 +169,31 @@
 </main>
 
 <script>
-  const correctPassword = "1234"; // 🔑 change this if you want
+  const correctPassword = "1234"; // change this if you want
 
   function checkPassword() {
-    const input = document.getElementById("passwordInput").value;
+    const inputField = document.getElementById("passwordInput");
+    const input = inputField.value;
 
     if (input === correctPassword) {
       document.getElementById("passwordDiv").style.display = "none";
       document.getElementById("games").style.display = "flex";
     } else {
       document.getElementById("errorMsg").style.display = "block";
+      inputField.value = "";
     }
   }
 
   function loadGame(game) {
-    document.getElementById("gameFrame").src = game;
+    const frame = document.getElementById("gameFrame");
+    frame.src = game;
+
+    // smooth scroll to game
+    frame.scrollIntoView({ behavior: "smooth" });
+  }
+
+  function goHome() {
+    document.getElementById("gameFrame").src = "";
   }
 </script>
 
