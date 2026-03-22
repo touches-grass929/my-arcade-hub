@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Arcade Hub</title>
+<style>
+body { background:#0f172a; color:white; text-align:center; font-family:Arial; }
+button { padding:10px; margin:10px; }
+</style>
+</head>
+<body>
+
+<h1>🎮 Arcade Hub</h1>
+
+<button onclick="showGame('click')">Click Game</button>
+<button onclick="showGame('guess')">Guess Game</button>
+<button onclick="showGame('snake')">Snake</button>
+<button onclick="showGame('pong')">Pong</button>
+
+<div id="click" style="display:none;">
+<h2>Click Game</h2>
+<p id="count">0</p>
+<button onclick="clickGame()">CLICK</button>
+</div>
+
+<div id="guess" style="display:none;">
+<h2>Guess Game</h2>
+<input id="guessInput">
+<button onclick="checkGuess()">Guess</button>
+<p id="result"></p>
+</div>
+
+<div id="snake" style="display:none;">
+<iframe src="snake.html" width="420" height="450"></iframe>
+</div>
+
+<div id="pong" style="display:none;">
+<iframe src="pong.html" width="620" height="450"></iframe>
+</div>
+
+<script>
+let count=0;
+function clickGame(){ count++; document.getElementById("count").innerText=count; }
+
+let number=Math.floor(Math.random()*10)+1;
+function checkGuess(){
+let g=document.getElementById("guessInput").value;
+document.getElementById("result").innerText=(g==number)?"Correct":"Try again";
+}
+
+function showGame(id){
+document.querySelectorAll("div").forEach(d=>d.style.display="none");
+document.getElementById(id).style.display="block";
+}
+</script>
+
+</body>
+</html>
