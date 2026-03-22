@@ -10,18 +10,46 @@
     button { background:#0f0; border:none; padding:12px 20px; font-size:18px; font-weight:bold; border-radius:6px; cursor:pointer; transition: background 0.3s ease; width:200px; }
     button:hover { background:#0c0; }
     iframe { margin-top:20px; border:2px solid #0f0; width:600px; height:420px; background:#000; border-radius:8px; }
+    #games { display:none; }
   </style>
 </head>
 <body>
   <header>My Arcade Hub 🎮</header>
+
   <main>
-    <button onclick="loadGame('snake.html')">Play Snake</button>
-    <button onclick="loadGame('pong.html')">Play Pong</button>
-    <iframe id="gameFrame" src="" title="Game Frame"></iframe>
+    <!-- Password form -->
+    <div id="passwordDiv">
+      <p>Enter password to access the arcade:</p>
+      <input type="password" id="passwordInput" placeholder="Password"/>
+      <button onclick="checkPassword()">Enter</button>
+      <p id="errorMsg" style="color:red; display:none;">Wrong password!</p>
+    </div>
+
+    <!-- Games area -->
+    <div id="games">
+      <button onclick="loadGame('snake.html')">Play Snake</button>
+      <button onclick="loadGame('pong.html')">Play Pong</button>
+      <iframe id="gameFrame" src="" title="Game Frame"></iframe>
+    </div>
   </main>
 
   <script>
-    function loadGame(game){ document.getElementById('gameFrame').src=game; }
+    const correctPassword = "google"; // <-- change this to whatever you want
+
+    function checkPassword() {
+      const input = document.getElementById('passwordInput').value;
+      const errorMsg = document.getElementById('errorMsg');
+      if(input === correctPassword){
+        document.getElementById('passwordDiv').style.display = 'none';
+        document.getElementById('games').style.display = 'flex';
+      } else {
+        errorMsg.style.display = 'block';
+      }
+    }
+
+    function loadGame(game){
+      document.getElementById('gameFrame').src = game;
+    }
   </script>
 </body>
 </html>
