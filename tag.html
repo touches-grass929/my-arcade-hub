@@ -17,24 +17,25 @@
     margin: 10px 0;
   }
 
-  #controls {
+  #ui {
     margin-bottom: 10px;
   }
 
   #game {
     position: relative;
-    width: 1000px;
-    height: 650px;
+    width: 1100px;
+    height: 700px;
     margin: auto;
-    background: #222;
+    background: linear-gradient(#3aa0ff, #8fd3ff);
     overflow: hidden;
-    border: 2px solid #0f0;
+    border: 3px solid #0f0;
   }
 
   .player {
     position: absolute;
     width: 20px;
     height: 20px;
+    border-radius: 4px;
   }
 
   #p1 { background: red; }
@@ -43,19 +44,22 @@
 
   .platform {
     position: absolute;
-    background: #555;
+    background: #5a8f3b;
+    border-radius: 4px;
   }
 
-  .wall {
+  .trampoline {
     position: absolute;
-    background: #666;
+    width: 40px;
+    height: 120px;
+    background: orange;
   }
 
   .tag-label {
     position: absolute;
     font-size: 10px;
     font-weight: bold;
-    transform: translateY(-15px);
+    transform: translateY(-18px);
   }
 </style>
 </head>
@@ -64,15 +68,8 @@
 
 <h2>3 Player Tag</h2>
 
-<div id="controls">
-  Map:
-  <select id="mapSelect" onchange="loadMap()">
-    <option value="1">Map 1 (Standard)</option>
-    <option value="2">Map 2 (Floating Platforms)</option>
-    <option value="3">Map 3 (Maze)</option>
-  </select>
-
-  Time: <span id="timer">90</span>s
+<div id="ui">
+  Map Style Arena | Time: <span id="timer">90</span>s
 </div>
 
 <div id="game">
@@ -84,25 +81,37 @@
   <div id="label2" class="tag-label"></div>
   <div id="label3" class="tag-label"></div>
 
-  <div id="terrain"></div>
+  <!-- Edge trampolines -->
+  <div id="leftTramp" class="trampoline" style="left:0; top:250px;"></div>
+  <div id="rightTramp" class="trampoline" style="left:1060px; top:250px;"></div>
+
+  <!-- Platforms -->
+  <div class="platform" style="width:300px;height:12px;left:100px;top:550px;"></div>
+  <div class="platform" style="width:250px;height:12px;left:450px;top:480px;"></div>
+  <div class="platform" style="width:200px;height:12px;left:750px;top:420px;"></div>
+
+  <div class="platform" style="width:180px;height:12px;left:200px;top:380px;"></div>
+  <div class="platform" style="width:180px;height:12px;left:600px;top:320px;"></div>
+
+  <div class="platform" style="width:150px;height:12px;left:100px;top:250px;"></div>
+  <div class="platform" style="width:150px;height:12px;left:800px;top:200px;"></div>
+
+  <div class="platform" style="width:220px;height:12px;left:400px;top:150px;"></div>
+
 </div>
 
 <script>
-const game = document.getElementById("game");
-const terrain = document.getElementById("terrain");
-
 let players = {
-  p1: {x:100,y:500,vx:0,vy:0},
-  p2: {x:300,y:500,vx:0,vy:0},
-  p3: {x:500,y:500,vx:0,vy:0}
+  p1: {x:150,y:600,vx:0,vy:0},
+  p2: {x:400,y:600,vx:0,vy:0},
+  p3: {x:700,y:600,vx:0,vy:0}
 };
 
 let gravity = 0.6;
-let jumpPower = -13; // 🔼 stronger jump
+let jumpPower = -14;
 let keys = {};
 let tagger = "p1";
 
-// ✅ Prevent arrow key scrolling
 document.addEventListener("keydown", e => {
   if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.key)) {
     e.preventDefault();
@@ -114,46 +123,6 @@ document.addEventListener("keyup", e => {
   keys[e.key.toLowerCase()] = false;
 });
 
-// ---------------- MAPS ----------------
-
-function loadMap() {
-  let map = document.getElementById("mapSelect").value;
-  terrain.innerHTML = "";
-
-  if (map === "1") {
-    terrain.innerHTML = `
-      <div class="platform" style="width:300px;height:12px;left:100px;top:400px;"></div>
-      <div class="platform" style="width:300px;height:12px;left:500px;top:300px;"></div>
-    `;
-  }
-
-  if (map === "2") {
-    terrain.innerHTML = `
-      <div class="platform" style="width:200px;height:12px;left:100px;top:450px;"></div>
-      <div class="platform" style="width:200px;height:12px;left:350px;top:350px;"></div>
-      <div class="platform" style="width:200px;height:12px;left:600px;top:250px;"></div>
-    `;
-  }
-
-  if (map === "3") {
-    terrain.innerHTML = `
-      <div class="wall" style="width:30px;height:400px;left:250px;top:200px;"></div>
-      <div class="wall" style="width:30px;height:400px;left:650px;top:200px;"></div>
-      <div class="platform" style="width:300px;height:12px;left:350px;top:350px;"></div>
-    `;
-  }
-
-  resetPlayers();
-}
-
-function resetPlayers() {
-  players.p1 = {x:100,y:500,vx:0,vy:0};
-  players.p2 = {x:300,y:500,vx:0,vy:0};
-  players.p3 = {x:500,y:500,vx:0,vy:0};
-}
-
-loadMap();
-
 // ---------------- MOVEMENT ----------------
 
 function movePlayer(id, left, right, jump) {
@@ -161,9 +130,9 @@ function movePlayer(id, left, right, jump) {
 
   if (keys[left]) p.vx = -4;
   else if (keys[right]) p.vx = 4;
-  else p.vx *= 0.8;
+  else p.vx *= 0.85;
 
-  if (keys[jump] && p.y >= 500) {
+  if (keys[jump] && p.y >= 600) {
     p.vy = jumpPower;
   }
 }
@@ -173,13 +142,13 @@ function applyPhysics(p) {
   p.x += p.vx;
   p.y += p.vy;
 
-  if (p.y > 500) {
-    p.y = 500;
+  if (p.y > 600) {
+    p.y = 600;
     p.vy = 0;
   }
 
   if (p.x < 0) p.x = 0;
-  if (p.x > 980) p.x = 980;
+  if (p.x > 1080) p.x = 1080;
 }
 
 // ---------------- TAG SYSTEM ----------------
@@ -189,25 +158,44 @@ function checkTag() {
 
   ids.forEach(a => {
     ids.forEach(b => {
-      if (a !== b) {
+      if (a !== b && a === tagger) {
         let pa = players[a];
         let pb = players[b];
 
-        // ✅ Only the IT player can tag others
-        if (a === tagger) {
-          if (Math.abs(pa.x - pb.x) < 25 && Math.abs(pa.y - pb.y) < 25) {
-            tagger = b;
-          }
+        if (Math.abs(pa.x - pb.x) < 25 && Math.abs(pa.y - pb.y) < 25) {
+          tagger = b;
         }
       }
     });
   });
 }
 
+// ---------------- TRAMPOLINES ----------------
+
+function checkTrampoline(p) {
+  let left = document.getElementById("leftTramp").getBoundingClientRect();
+  let right = document.getElementById("rightTramp").getBoundingClientRect();
+  let rect = document.getElementById("game").getBoundingClientRect();
+
+  let px = p.x + rect.left;
+  let py = p.y + rect.top;
+
+  if (px > left.left && px < left.right && py > left.top && py < left.bottom) {
+    p.vy = -16;
+    p.vx = 7;
+  }
+
+  if (px > right.left && px < right.right && py > right.top && py < right.bottom) {
+    p.vy = -16;
+    p.vx = -7;
+  }
+}
+
+// ---------------- LABELS ----------------
+
 function updateLabels() {
   ["p1","p2","p3"].forEach(id => {
     let label = document.getElementById("label" + id.slice(1));
-
     label.innerText = (tagger === id) ? "IT" : "";
 
     label.style.left = players[id].x + "px";
@@ -222,7 +210,10 @@ function update() {
   movePlayer("p2","arrowleft","arrowright","arrowup");
   movePlayer("p3","j","l","i");
 
-  Object.values(players).forEach(p => applyPhysics(p));
+  Object.values(players).forEach(p => {
+    applyPhysics(p);
+    checkTrampoline(p);
+  });
 
   checkTag();
   updateLabels();
