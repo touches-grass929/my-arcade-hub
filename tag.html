@@ -16,7 +16,7 @@
   #game {
     position: relative;
     width: 750px;
-    height: 450px;
+    height: 400px;
     margin: auto;
     background: linear-gradient(#3aa0ff, #8fd3ff);
     overflow: hidden;
@@ -72,14 +72,14 @@ Time: <span id="timer">90</span>s
   <div id="l2" class="label"></div>
   <div id="l3" class="label"></div>
 
-  <!-- Ground trampolines -->
-  <div id="leftTramp" class="trampoline" style="left:0;"></div>
-  <div id="rightTramp" class="trampoline" style="right:0;"></div>
+  <!-- Trampolines -->
+  <div class="trampoline" style="left:0;"></div>
+  <div class="trampoline" style="right:0;"></div>
 
   <!-- Platforms -->
-  <div class="platform" style="left:80px;top:350px;width:160px;height:12px;"></div>
-  <div class="platform" style="left:300px;top:280px;width:160px;height:12px;"></div>
-  <div class="platform" style="left:520px;top:220px;width:160px;height:12px;"></div>
+  <div class="platform" style="left:60px;top:300px;width:150px;height:10px;"></div>
+  <div class="platform" style="left:280px;top:240px;width:150px;height:10px;"></div>
+  <div class="platform" style="left:500px;top:180px;width:150px;height:10px;"></div>
 
 </div>
 
@@ -88,17 +88,17 @@ const game = document.getElementById("game");
 const platforms = document.querySelectorAll(".platform");
 
 let players = {
-  p1: {x:80,y:400,vx:0,vy:0},
-  p2: {x:300,y:400,vx:0,vy:0},
-  p3: {x:500,y:400,vx:0,vy:0}
+  p1: {x:60,y:340,vx:0,vy:0},
+  p2: {x:250,y:340,vx:0,vy:0},
+  p3: {x:450,y:340,vx:0,vy:0}
 };
 
 let gravity = 0.7;
-let jump = -14;
+let jump = -13;
 let keys = {};
 let tagger = "p1";
 
-// prevent arrow key scrolling
+// prevent scrolling
 document.addEventListener("keydown", e => {
   if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.key)) {
     e.preventDefault();
@@ -150,28 +150,28 @@ function collide(p) {
   });
 
   // ground
-  if (p.y > 425) {
-    p.y = 425;
+  if (p.y > 375) {
+    p.y = 375;
     p.vy = 0;
     p.onGround = true;
   }
 }
 
-// trampolines (GROUND EDGE)
+// trampolines
 function trampoline(p) {
-  if (p.y >= 425) {
+  if (p.y >= 375) {
     if (p.x < 60) {
-      p.vy = -18;
+      p.vy = -16;
       p.vx = 6;
     }
     if (p.x > 690) {
-      p.vy = -18;
+      p.vy = -16;
       p.vx = -6;
     }
   }
 }
 
-// tag system (FIXED)
+// tag system
 function tagCheck() {
   let it = players[tagger];
 
@@ -186,7 +186,6 @@ function tagCheck() {
       if (touching) {
         tagger = id;
 
-        // visual feedback
         document.body.style.background = "#400";
         setTimeout(() => document.body.style.background = "#111", 100);
       }
@@ -204,7 +203,7 @@ function labels() {
   });
 }
 
-// game loop
+// loop
 function update() {
   move("p1","a","d","w");
   move("p2","arrowleft","arrowright","arrowup");
@@ -225,14 +224,14 @@ function update() {
   tagCheck();
   labels();
 
-  document.getElementById("p1").style.left = players.p1.x + "px";
-  document.getElementById("p1").style.top = players.p1.y + "px";
+  document.getElementById("p1").style.left = players.p1.x+"px";
+  document.getElementById("p1").style.top = players.p1.y+"px";
 
-  document.getElementById("p2").style.left = players.p2.x + "px";
-  document.getElementById("p2").style.top = players.p2.y + "px";
+  document.getElementById("p2").style.left = players.p2.x+"px";
+  document.getElementById("p2").style.top = players.p2.y+"px";
 
-  document.getElementById("p3").style.left = players.p3.x + "px";
-  document.getElementById("p3").style.top = players.p3.y + "px";
+  document.getElementById("p3").style.left = players.p3.x+"px";
+  document.getElementById("p3").style.top = players.p3.y+"px";
 
   requestAnimationFrame(update);
 }
@@ -241,15 +240,15 @@ update();
 
 // timer
 let t = 90;
-setInterval(() => {
+setInterval(()=>{
   t--;
   document.getElementById("timer").textContent = t;
 
-  if (t <= 0) {
-    alert("Game Over! Last tagged loses: " + tagger.toUpperCase());
+  if(t<=0){
+    alert("Game Over! Last tagged loses: "+tagger.toUpperCase());
     location.reload();
   }
-}, 1000);
+},1000);
 </script>
 
 </body>
