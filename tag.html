@@ -9,22 +9,14 @@
     margin: 0;
     background: #111;
     color: white;
-    font-family: Arial, sans-serif;
+    font-family: Arial;
     text-align: center;
-  }
-
-  h2 {
-    margin: 10px 0;
-  }
-
-  #ui {
-    margin-bottom: 10px;
   }
 
   #game {
     position: relative;
-    width: 1100px;
-    height: 700px;
+    width: 1400px;
+    height: 800px;
     margin: auto;
     background: linear-gradient(#3aa0ff, #8fd3ff);
     overflow: hidden;
@@ -33,9 +25,8 @@
 
   .player {
     position: absolute;
-    width: 20px;
-    height: 20px;
-    border-radius: 4px;
+    width: 25px;
+    height: 25px;
   }
 
   #p1 { background: red; }
@@ -44,20 +35,19 @@
 
   .platform {
     position: absolute;
-    background: #5a8f3b;
-    border-radius: 4px;
+    background: #4caf50;
   }
 
   .trampoline {
     position: absolute;
     width: 40px;
-    height: 120px;
+    height: 150px;
     background: orange;
   }
 
-  .tag-label {
+  .label {
     position: absolute;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: bold;
     transform: translateY(-18px);
   }
@@ -67,93 +57,126 @@
 <body>
 
 <h2>3 Player Tag</h2>
-
-<div id="ui">
-  Map Style Arena | Time: <span id="timer">90</span>s
-</div>
+Time: <span id="timer">90</span>s
 
 <div id="game">
+
+  <!-- Players -->
   <div id="p1" class="player"></div>
   <div id="p2" class="player"></div>
   <div id="p3" class="player"></div>
 
-  <div id="label1" class="tag-label"></div>
-  <div id="label2" class="tag-label"></div>
-  <div id="label3" class="tag-label"></div>
+  <!-- Labels -->
+  <div id="l1" class="label"></div>
+  <div id="l2" class="label"></div>
+  <div id="l3" class="label"></div>
 
-  <!-- Edge trampolines -->
-  <div id="leftTramp" class="trampoline" style="left:0; top:250px;"></div>
-  <div id="rightTramp" class="trampoline" style="left:1060px; top:250px;"></div>
+  <!-- Trampolines -->
+  <div id="leftTramp" class="trampoline" style="left:0; top:300px;"></div>
+  <div id="rightTramp" class="trampoline" style="right:0; top:300px;"></div>
 
   <!-- Platforms -->
-  <div class="platform" style="width:300px;height:12px;left:100px;top:550px;"></div>
-  <div class="platform" style="width:250px;height:12px;left:450px;top:480px;"></div>
-  <div class="platform" style="width:200px;height:12px;left:750px;top:420px;"></div>
+  <div class="platform" style="left:100px;top:700px;width:400px;height:15px;"></div>
+  <div class="platform" style="left:600px;top:600px;width:300px;height:15px;"></div>
+  <div class="platform" style="left:1000px;top:500px;width:300px;height:15px;"></div>
 
-  <div class="platform" style="width:180px;height:12px;left:200px;top:380px;"></div>
-  <div class="platform" style="width:180px;height:12px;left:600px;top:320px;"></div>
+  <div class="platform" style="left:200px;top:500px;width:250px;height:15px;"></div>
+  <div class="platform" style="left:700px;top:400px;width:250px;height:15px;"></div>
 
-  <div class="platform" style="width:150px;height:12px;left:100px;top:250px;"></div>
-  <div class="platform" style="width:150px;height:12px;left:800px;top:200px;"></div>
+  <div class="platform" style="left:100px;top:350px;width:200px;height:15px;"></div>
+  <div class="platform" style="left:1100px;top:300px;width:200px;height:15px;"></div>
 
-  <div class="platform" style="width:220px;height:12px;left:400px;top:150px;"></div>
+  <div class="platform" style="left:500px;top:250px;width:300px;height:15px;"></div>
 
 </div>
 
 <script>
+const game = document.getElementById("game");
+const platforms = document.querySelectorAll(".platform");
+
 let players = {
-  p1: {x:150,y:600,vx:0,vy:0},
-  p2: {x:400,y:600,vx:0,vy:0},
-  p3: {x:700,y:600,vx:0,vy:0}
+  p1: {x:150,y:650,vx:0,vy:0},
+  p2: {x:350,y:650,vx:0,vy:0},
+  p3: {x:550,y:650,vx:0,vy:0}
 };
 
-let gravity = 0.6;
-let jumpPower = -14;
+let gravity = 0.7;
+let jump = -15;
 let keys = {};
 let tagger = "p1";
 
+// prevent scrolling
 document.addEventListener("keydown", e => {
-  if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.key)) {
-    e.preventDefault();
-  }
+  if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.key)) e.preventDefault();
   keys[e.key.toLowerCase()] = true;
 });
+document.addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
 
-document.addEventListener("keyup", e => {
-  keys[e.key.toLowerCase()] = false;
-});
-
-// ---------------- MOVEMENT ----------------
-
-function movePlayer(id, left, right, jump) {
+// movement
+function move(id, l, r, j) {
   let p = players[id];
 
-  if (keys[left]) p.vx = -4;
-  else if (keys[right]) p.vx = 4;
-  else p.vx *= 0.85;
+  if (keys[l]) p.vx = -5;
+  else if (keys[r]) p.vx = 5;
+  else p.vx *= 0.8;
 
-  if (keys[jump] && p.y >= 600) {
-    p.vy = jumpPower;
+  if (keys[j] && p.onGround) {
+    p.vy = jump;
+    p.onGround = false;
   }
 }
 
-function applyPhysics(p) {
-  p.vy += gravity;
-  p.x += p.vx;
-  p.y += p.vy;
+// platform collision
+function collide(p) {
+  p.onGround = false;
 
-  if (p.y > 600) {
-    p.y = 600;
+  platforms.forEach(pl => {
+    let r = pl.getBoundingClientRect();
+    let g = game.getBoundingClientRect();
+
+    let px = p.x + g.left;
+    let py = p.y + g.top;
+
+    let withinX = px + 25 > r.left && px < r.right;
+    let falling = p.vy >= 0;
+
+    if (withinX && falling && py + 25 <= r.top + 10 && py + 25 >= r.top - 10) {
+      p.y = r.top - g.top - 25;
+      p.vy = 0;
+      p.onGround = true;
+    }
+  });
+
+  // floor
+  if (p.y > 750) {
+    p.y = 750;
     p.vy = 0;
+    p.onGround = true;
   }
-
-  if (p.x < 0) p.x = 0;
-  if (p.x > 1080) p.x = 1080;
 }
 
-// ---------------- TAG SYSTEM ----------------
+// trampolines
+function trampoline(p) {
+  let left = document.getElementById("leftTramp").getBoundingClientRect();
+  let right = document.getElementById("rightTramp").getBoundingClientRect();
+  let g = game.getBoundingClientRect();
 
-function checkTag() {
+  let px = p.x + g.left;
+  let py = p.y + g.top;
+
+  if (px < left.right && py > left.top && py < left.bottom) {
+    p.vy = -20;
+    p.vx = 10;
+  }
+
+  if (px + 25 > right.left && py > right.top && py < right.bottom) {
+    p.vy = -20;
+    p.vx = -10;
+  }
+}
+
+// tagging
+function tagCheck() {
   let ids = Object.keys(players);
 
   ids.forEach(a => {
@@ -162,7 +185,7 @@ function checkTag() {
         let pa = players[a];
         let pb = players[b];
 
-        if (Math.abs(pa.x - pb.x) < 25 && Math.abs(pa.y - pb.y) < 25) {
+        if (Math.abs(pa.x - pb.x) < 30 && Math.abs(pa.y - pb.y) < 30) {
           tagger = b;
         }
       }
@@ -170,81 +193,61 @@ function checkTag() {
   });
 }
 
-// ---------------- TRAMPOLINES ----------------
-
-function checkTrampoline(p) {
-  let left = document.getElementById("leftTramp").getBoundingClientRect();
-  let right = document.getElementById("rightTramp").getBoundingClientRect();
-  let rect = document.getElementById("game").getBoundingClientRect();
-
-  let px = p.x + rect.left;
-  let py = p.y + rect.top;
-
-  if (px > left.left && px < left.right && py > left.top && py < left.bottom) {
-    p.vy = -16;
-    p.vx = 7;
-  }
-
-  if (px > right.left && px < right.right && py > right.top && py < right.bottom) {
-    p.vy = -16;
-    p.vx = -7;
-  }
-}
-
-// ---------------- LABELS ----------------
-
-function updateLabels() {
-  ["p1","p2","p3"].forEach(id => {
-    let label = document.getElementById("label" + id.slice(1));
-    label.innerText = (tagger === id) ? "IT" : "";
-
-    label.style.left = players[id].x + "px";
-    label.style.top = players[id].y + "px";
+// labels
+function labels() {
+  ["p1","p2","p3"].forEach((id,i) => {
+    let l = document.getElementById("l"+(i+1));
+    l.innerText = (tagger === id) ? "IT" : "";
+    l.style.left = players[id].x + "px";
+    l.style.top = players[id].y + "px";
   });
 }
 
-// ---------------- GAME LOOP ----------------
-
+// loop
 function update() {
-  movePlayer("p1","a","d","w");
-  movePlayer("p2","arrowleft","arrowright","arrowup");
-  movePlayer("p3","j","l","i");
+  move("p1","a","d","w");
+  move("p2","arrowleft","arrowright","arrowup");
+  move("p3","j","l","i");
 
   Object.values(players).forEach(p => {
-    applyPhysics(p);
-    checkTrampoline(p);
+    p.vy += gravity;
+    p.x += p.vx;
+    p.y += p.vy;
+
+    collide(p);
+    trampoline(p);
+
+    if (p.x < 0) p.x = 0;
+    if (p.x > 1375) p.x = 1375;
   });
 
-  checkTag();
-  updateLabels();
+  tagCheck();
+  labels();
 
-  document.getElementById("p1").style.left = players.p1.x + "px";
-  document.getElementById("p1").style.top = players.p1.y + "px";
+  document.getElementById("p1").style.left = players.p1.x+"px";
+  document.getElementById("p1").style.top = players.p1.y+"px";
 
-  document.getElementById("p2").style.left = players.p2.x + "px";
-  document.getElementById("p2").style.top = players.p2.y + "px";
+  document.getElementById("p2").style.left = players.p2.x+"px";
+  document.getElementById("p2").style.top = players.p2.y+"px";
 
-  document.getElementById("p3").style.left = players.p3.x + "px";
-  document.getElementById("p3").style.top = players.p3.y + "px";
+  document.getElementById("p3").style.left = players.p3.x+"px";
+  document.getElementById("p3").style.top = players.p3.y+"px";
 
   requestAnimationFrame(update);
 }
 
 update();
 
-// ---------------- TIMER ----------------
-
-let time = 90;
-
-setInterval(() => {
-  time--;
-  document.getElementById("timer").textContent = time;
-
-  if (time <= 0) {
-    alert("Game Over! Last tagged (IT) loses: " + tagger.toUpperCase());
+// timer
+let t = 90;
+setInterval(()=>{
+  t--;
+  document.getElementById("timer").textContent = t;
+  if(t<=0){
+    alert("Game Over! Last tagged loses: "+tagger.toUpperCase());
     location.reload();
   }
-}, 1000);
+},1000);
 </script>
 
 </body>
