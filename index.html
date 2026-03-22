@@ -36,7 +36,6 @@
       max-width:900px;
     }
 
-    /* 🔐 Password section */
     #passwordDiv {
       text-align:center;
     }
@@ -63,7 +62,6 @@
       background:#0c0;
     }
 
-    /* 🎮 Grid layout */
     .grid {
       display:grid;
       grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));
@@ -135,6 +133,7 @@
 
     <div class="grid">
 
+      <!-- Local games -->
       <div class="card">
         <h3>Snake</h3>
         <button class="play-btn" onclick="loadGame('snake.html')">Play</button>
@@ -155,9 +154,16 @@
         <button class="play-btn" onclick="loadGame('geometrydash.html')">Play</button>
       </div>
 
+      <!-- itch.io embedded game -->
+      <div class="card">
+        <h3>Itch Game</h3>
+        <button class="play-btn" onclick="loadGame('https://itch.io/embed-upload/3377395?color=ff1bf0')">
+          Play
+        </button>
+      </div>
+
     </div>
 
-    <!-- Controls -->
     <div class="controls">
       <button onclick="goHome()">Back to Menu</button>
     </div>
@@ -188,7 +194,6 @@
     const frame = document.getElementById("gameFrame");
     frame.src = game;
 
-    // smooth scroll to game
     frame.scrollIntoView({ behavior: "smooth" });
   }
 
