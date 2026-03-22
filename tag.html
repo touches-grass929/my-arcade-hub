@@ -2,168 +2,234 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>3 Player Tag Game</title>
+<title>3 Player Tag</title>
 
 <style>
   body {
     margin: 0;
     background: #111;
     color: white;
-    font-family: Arial;
+    font-family: Arial, sans-serif;
     text-align: center;
   }
 
-  canvas {
-    background: #222;
-    display: block;
+  #controls {
+    margin: 10px;
+  }
+
+  #game {
+    position: relative;
+    width: 800px;
+    height: 500px;
     margin: 10px auto;
+    background: #222;
+    overflow: hidden;
     border: 2px solid #0f0;
   }
 
-  .controls {
-    display: flex;
-    justify-content: center;
-    gap: 40px;
-    flex-wrap: wrap;
-    margin-bottom: 10px;
-    font-size: 14px;
-  }
-
   .player {
-    background: #333;
-    padding: 10px 15px;
-    border-radius: 8px;
+    position: absolute;
+    width: 20px;
+    height: 20px;
   }
 
-  .blue { border: 2px solid blue; }
-  .red { border: 2px solid red; }
-  .green { border: 2px solid green; }
+  #p1 { background: red; }
+  #p2 { background: blue; }
+  #p3 { background: green; }
+
+  .platform {
+    position: absolute;
+    background: #555;
+  }
+
+  .wall {
+    position: absolute;
+    background: #666;
+  }
+
+  .tag-label {
+    position: absolute;
+    font-size: 10px;
+    font-weight: bold;
+    transform: translateY(-15px);
+  }
 </style>
 </head>
 
 <body>
 
-<h2>3 Player Tag Game</h2>
-<p id="status"></p>
+<h2>3 Player Tag</h2>
 
-<div class="controls">
-  <div class="player blue">
-    <b>Blue Player</b><br>
-    Move: W A S D
-  </div>
-
-  <div class="player red">
-    <b>Red Player</b><br>
-    Move: Arrow Keys
-  </div>
-
-  <div class="player green">
-    <b>Green Player</b><br>
-    Move: I J K L
-  </div>
+<div id="controls">
+  Map:
+  <select id="mapSelect" onchange="loadMap()">
+    <option value="1">Map 1 (Standard)</option>
+    <option value="2">Map 2 (Floating Platforms)</option>
+    <option value="3">Map 3 (Maze)</option>
+  </select>
+  Time: <span id="timer">90</span>s
 </div>
 
-<canvas id="game" width="800" height="500"></canvas>
+<div id="game">
+  <div id="p1" class="player"></div>
+  <div id="p2" class="player"></div>
+  <div id="p3" class="player"></div>
+
+  <div id="label1" class="tag-label"></div>
+  <div id="label2" class="tag-label"></div>
+  <div id="label3" class="tag-label"></div>
+
+  <!-- Dynamic terrain container -->
+  <div id="terrain"></div>
+</div>
 
 <script>
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
+const game = document.getElementById("game");
+const terrain = document.getElementById("terrain");
 
-const players = [
-  { x: 100, y: 100, color: "blue", keys: {}, speed: 3 },
-  { x: 700, y: 100, color: "red", keys: {}, speed: 3 },
-  { x: 400, y: 400, color: "green", keys: {}, speed: 3 }
-];
+let players = {
+  p1: {x:100,y:400,vx:0,vy:0},
+  p2: {x:300,y:400,vx:0,vy:0},
+  p3: {x:500,y:400,vx:0,vy:0}
+};
 
-let itIndex = 0;
+let gravity = 0.5;
+let keys = {};
+let tagger = "p1";
 
-function drawPlayer(p) {
-  ctx.fillStyle = p.color;
-  ctx.fillRect(p.x, p.y, 20, 20);
+document.addEventListener("keydown", e => keys[e.key.toLowerCase()] = true);
+document.addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
+
+// ---------------- MAPS ----------------
+
+function loadMap() {
+  let map = document.getElementById("mapSelect").value;
+  terrain.innerHTML = "";
+
+  if (map === "1") {
+    terrain.innerHTML = `
+      <div class="platform" style="width:200px;height:10px;left:100px;top:300px;"></div>
+      <div class="platform" style="width:200px;height:10px;left:400px;top:200px;"></div>
+    `;
+  }
+
+  if (map === "2") {
+    terrain.innerHTML = `
+      <div class="platform" style="width:150px;height:10px;left:100px;top:350px;"></div>
+      <div class="platform" style="width:150px;height:10px;left:300px;top:250px;"></div>
+      <div class="platform" style="width:150px;height:10px;left:500px;top:150px;"></div>
+    `;
+  }
+
+  if (map === "3") {
+    terrain.innerHTML = `
+      <div class="wall" style="width:20px;height:300px;left:200px;top:100px;"></div>
+      <div class="wall" style="width:20px;height:300px;left:500px;top:100px;"></div>
+      <div class="platform" style="width:200px;height:10px;left:300px;top:200px;"></div>
+    `;
+  }
+
+  // reset players
+  players.p1.x = 100; players.p1.y = 400;
+  players.p2.x = 300; players.p2.y = 400;
+  players.p3.x = 500; players.p3.y = 400;
+}
+
+loadMap();
+
+// ---------------- GAME LOGIC ----------------
+
+function movePlayer(id, left, right, jump) {
+  let p = players[id];
+
+  if (keys[left]) p.vx = -3;
+  else if (keys[right]) p.vx = 3;
+  else p.vx *= 0.8;
+
+  if (keys[jump] && p.y >= 400) {
+    p.vy = -10;
+  }
+}
+
+function applyPhysics(p) {
+  p.vy += gravity;
+  p.x += p.vx;
+  p.y += p.vy;
+
+  if (p.y > 400) {
+    p.y = 400;
+    p.vy = 0;
+  }
+
+  if (p.x < 0) p.x = 0;
+  if (p.x > 780) p.x = 780;
+}
+
+function checkTag() {
+  let ids = Object.keys(players);
+
+  ids.forEach(a => {
+    ids.forEach(b => {
+      if (a !== b) {
+        let pa = players[a];
+        let pb = players[b];
+
+        if (Math.abs(pa.x - pb.x) < 20 && Math.abs(pa.y - pb.y) < 20) {
+          tagger = a;
+        }
+      }
+    });
+  });
+}
+
+function updateLabels() {
+  ["p1","p2","p3"].forEach(id => {
+    let label = document.getElementById("label" + id.slice(1));
+
+    label.innerText = (tagger === id) ? "IT" : "";
+
+    label.style.left = players[id].x + "px";
+    label.style.top = players[id].y + "px";
+  });
 }
 
 function update() {
-  players.forEach((p, i) => {
-    if (p.keys["left"]) p.x -= p.speed;
-    if (p.keys["right"]) p.x += p.speed;
-    if (p.keys["up"]) p.y -= p.speed;
-    if (p.keys["down"]) p.y += p.speed;
+  movePlayer("p1","a","d","w");
+  movePlayer("p2","arrowleft","arrowright","arrowup");
+  movePlayer("p3","j","l","i");
 
-    // boundaries
-    p.x = Math.max(0, Math.min(canvas.width - 20, p.x));
-    p.y = Math.max(0, Math.min(canvas.height - 20, p.y));
-  });
+  Object.values(players).forEach(p => applyPhysics(p));
 
-  // tagging logic
-  const it = players[itIndex];
-  players.forEach((p, i) => {
-    if (i !== itIndex) {
-      if (
-        Math.abs(p.x - it.x) < 20 &&
-        Math.abs(p.y - it.y) < 20
-      ) {
-        itIndex = i;
-      }
-    }
-  });
+  checkTag();
+  updateLabels();
 
-  document.getElementById("status").innerText =
-    "Player " + (itIndex + 1) + " is IT";
+  document.getElementById("p1").style.left = players.p1.x + "px";
+  document.getElementById("p1").style.top = players.p1.y + "px";
+
+  document.getElementById("p2").style.left = players.p2.x + "px";
+  document.getElementById("p2").style.top = players.p2.y + "px";
+
+  document.getElementById("p3").style.left = players.p3.x + "px";
+  document.getElementById("p3").style.top = players.p3.y + "px";
+
+  requestAnimationFrame(update);
 }
 
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  players.forEach(drawPlayer);
-}
+update();
 
-function gameLoop() {
-  update();
-  draw();
-  requestAnimationFrame(gameLoop);
-}
+// ---------------- TIMER ----------------
 
-// Key handling
-document.addEventListener("keydown", e => {
-  // Player 1 (WASD)
-  if (e.key === "w") players[0].keys.up = true;
-  if (e.key === "s") players[0].keys.down = true;
-  if (e.key === "a") players[0].keys.left = true;
-  if (e.key === "d") players[0].keys.right = true;
+let time = 90;
+setInterval(() => {
+  time--;
+  document.getElementById("timer").textContent = time;
 
-  // Player 2 (Arrow keys)
-  if (e.key === "ArrowUp") players[1].keys.up = true;
-  if (e.key === "ArrowDown") players[1].keys.down = true;
-  if (e.key === "ArrowLeft") players[1].keys.left = true;
-  if (e.key === "ArrowRight") players[1].keys.right = true;
+  if (time <= 0) {
+    alert("Game Over! Last tagged (IT) player loses: " + tagger.toUpperCase());
+    location.reload();
+  }
+}, 1000);
 
-  // Player 3 (IJKL)
-  if (e.key === "i") players[2].keys.up = true;
-  if (e.key === "k") players[2].keys.down = true;
-  if (e.key === "j") players[2].keys.left = true;
-  if (e.key === "l") players[2].keys.right = true;
-});
-
-document.addEventListener("keyup", e => {
-  // Player 1
-  if (e.key === "w") players[0].keys.up = false;
-  if (e.key === "s") players[0].keys.down = false;
-  if (e.key === "a") players[0].keys.left = false;
-  if (e.key === "d") players[0].keys.right = false;
-
-  // Player 2
-  if (e.key === "ArrowUp") players[1].keys.up = false;
-  if (e.key === "ArrowDown") players[1].keys.down = false;
-  if (e.key === "ArrowLeft") players[1].keys.left = false;
-  if (e.key === "ArrowRight") players[1].keys.right = false;
-
-  // Player 3
-  if (e.key === "i") players[2].keys.up = false;
-  if (e.key === "k") players[2].keys.down = false;
-  if (e.key === "j") players[2].keys.left = false;
-  if (e.key === "l") players[2].keys.right = false;
-});
-
-gameLoop();
 </script>
 
 </body>
