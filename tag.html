@@ -15,8 +15,8 @@
 
   #game {
     position: relative;
-    width: 900px;
-    height: 550px;
+    width: 750px;
+    height: 450px;
     margin: auto;
     background: linear-gradient(#3aa0ff, #8fd3ff);
     overflow: hidden;
@@ -77,9 +77,9 @@ Time: <span id="timer">90</span>s
   <div id="rightTramp" class="trampoline" style="right:0;"></div>
 
   <!-- Platforms -->
-  <div class="platform" style="left:100px;top:450px;width:200px;height:12px;"></div>
-  <div class="platform" style="left:350px;top:380px;width:200px;height:12px;"></div>
-  <div class="platform" style="left:600px;top:300px;width:200px;height:12px;"></div>
+  <div class="platform" style="left:80px;top:350px;width:160px;height:12px;"></div>
+  <div class="platform" style="left:300px;top:280px;width:160px;height:12px;"></div>
+  <div class="platform" style="left:520px;top:220px;width:160px;height:12px;"></div>
 
 </div>
 
@@ -88,9 +88,9 @@ const game = document.getElementById("game");
 const platforms = document.querySelectorAll(".platform");
 
 let players = {
-  p1: {x:100,y:480,vx:0,vy:0},
-  p2: {x:300,y:480,vx:0,vy:0},
-  p3: {x:500,y:480,vx:0,vy:0}
+  p1: {x:80,y:400,vx:0,vy:0},
+  p2: {x:300,y:400,vx:0,vy:0},
+  p3: {x:500,y:400,vx:0,vy:0}
 };
 
 let gravity = 0.7;
@@ -98,12 +98,17 @@ let jump = -14;
 let keys = {};
 let tagger = "p1";
 
-// prevent scrolling
+// prevent arrow key scrolling
 document.addEventListener("keydown", e => {
-  if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.key)) e.preventDefault();
+  if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.key)) {
+    e.preventDefault();
+  }
   keys[e.key.toLowerCase()] = true;
 });
-document.addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
+
+document.addEventListener("keyup", e => {
+  keys[e.key.toLowerCase()] = false;
+});
 
 // movement
 function move(id, l, r, j) {
@@ -130,8 +135,12 @@ function collide(p) {
     let px = p.x + g.left;
     let py = p.y + g.top;
 
-    let onTop = px + 25 > r.left && px < r.right &&
-                py + 25 >= r.top && py + 25 <= r.top + 10 && p.vy >= 0;
+    let onTop =
+      px + 25 > r.left &&
+      px < r.right &&
+      py + 25 >= r.top &&
+      py + 25 <= r.top + 10 &&
+      p.vy >= 0;
 
     if (onTop) {
       p.y = r.top - g.top - 25;
@@ -141,44 +150,43 @@ function collide(p) {
   });
 
   // ground
-  if (p.y > 525) {
-    p.y = 525;
+  if (p.y > 425) {
+    p.y = 425;
     p.vy = 0;
     p.onGround = true;
   }
 }
 
-// trampolines (GROUND)
+// trampolines (GROUND EDGE)
 function trampoline(p) {
-  if (p.y >= 525) {
+  if (p.y >= 425) {
     if (p.x < 60) {
       p.vy = -18;
       p.vx = 6;
     }
-    if (p.x > 840) {
+    if (p.x > 690) {
       p.vy = -18;
       p.vx = -6;
     }
   }
 }
 
-// 🔥 BETTER TAG SYSTEM
+// tag system (FIXED)
 function tagCheck() {
-  let ids = Object.keys(players);
+  let it = players[tagger];
 
-  ids.forEach(b => {
-    if (b !== tagger) {
-      let it = players[tagger];
-      let other = players[b];
+  Object.keys(players).forEach(id => {
+    if (id !== tagger) {
+      let p = players[id];
 
       let touching =
-        Math.abs(it.x - other.x) < 30 &&
-        Math.abs(it.y - other.y) < 30;
+        Math.abs(it.x - p.x) < 30 &&
+        Math.abs(it.y - p.y) < 30;
 
       if (touching) {
-        tagger = b;
+        tagger = id;
 
-        // 🔥 visual feedback
+        // visual feedback
         document.body.style.background = "#400";
         setTimeout(() => document.body.style.background = "#111", 100);
       }
@@ -196,7 +204,7 @@ function labels() {
   });
 }
 
-// loop
+// game loop
 function update() {
   move("p1","a","d","w");
   move("p2","arrowleft","arrowright","arrowup");
@@ -211,20 +219,20 @@ function update() {
     trampoline(p);
 
     if (p.x < 0) p.x = 0;
-    if (p.x > 875) p.x = 875;
+    if (p.x > 725) p.x = 725;
   });
 
   tagCheck();
   labels();
 
-  document.getElementById("p1").style.left = players.p1.x+"px";
-  document.getElementById("p1").style.top = players.p1.y+"px";
+  document.getElementById("p1").style.left = players.p1.x + "px";
+  document.getElementById("p1").style.top = players.p1.y + "px";
 
-  document.getElementById("p2").style.left = players.p2.x+"px";
-  document.getElementById("p2").style.top = players.p2.y+"px";
+  document.getElementById("p2").style.left = players.p2.x + "px";
+  document.getElementById("p2").style.top = players.p2.y + "px";
 
-  document.getElementById("p3").style.left = players.p3.x+"px";
-  document.getElementById("p3").style.top = players.p3.y+"px";
+  document.getElementById("p3").style.left = players.p3.x + "px";
+  document.getElementById("p3").style.top = players.p3.y + "px";
 
   requestAnimationFrame(update);
 }
@@ -233,15 +241,15 @@ update();
 
 // timer
 let t = 90;
-setInterval(()=>{
+setInterval(() => {
   t--;
   document.getElementById("timer").textContent = t;
 
-  if(t<=0){
-    alert("Game Over! Last tagged loses: "+tagger.toUpperCase());
+  if (t <= 0) {
+    alert("Game Over! Last tagged loses: " + tagger.toUpperCase());
     location.reload();
   }
-},1000);
+}, 1000);
 </script>
 
 </body>
