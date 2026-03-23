@@ -5,53 +5,53 @@
 <title>3 Player Tag</title>
 
 <style>
-  body {
-    margin: 0;
-    background: #111;
-    color: white;
-    font-family: Arial;
-    text-align: center;
-  }
+body {
+  margin: 0;
+  background: #111;
+  color: white;
+  text-align: center;
+  font-family: Arial;
+}
 
-  #game {
-    position: relative;
-    width: 750px;
-    height: 400px;
-    margin: auto;
-    background: linear-gradient(#3aa0ff, #8fd3ff);
-    overflow: hidden;
-    border: 3px solid #0f0;
-  }
+#game {
+  position: relative;
+  width: 750px;
+  height: 400px;
+  margin: auto;
+  background: linear-gradient(#3aa0ff, #8fd3ff);
+  border: 3px solid #0f0;
+  overflow: hidden;
+}
 
-  .player {
-    position: absolute;
-    width: 25px;
-    height: 25px;
-  }
+.player {
+  position: absolute;
+  width: 25px;
+  height: 25px;
+}
 
-  #p1 { background: red; }
-  #p2 { background: blue; }
-  #p3 { background: green; }
+#p1 { background: red; }
+#p2 { background: blue; }
+#p3 { background: green; }
 
-  .platform {
-    position: absolute;
-    background: #4caf50;
-  }
+.platform {
+  position: absolute;
+  background: #4caf50;
+}
 
-  .trampoline {
-    position: absolute;
-    width: 60px;
-    height: 20px;
-    background: orange;
-    bottom: 0;
-  }
+.trampoline {
+  position: absolute;
+  width: 60px;
+  height: 20px;
+  background: orange;
+  bottom: 0;
+}
 
-  .label {
-    position: absolute;
-    font-size: 12px;
-    font-weight: bold;
-    transform: translateY(-18px);
-  }
+.label {
+  position: absolute;
+  font-size: 12px;
+  font-weight: bold;
+  transform: translateY(-18px);
+}
 </style>
 </head>
 
@@ -62,12 +62,10 @@ Time: <span id="timer">90</span>s
 
 <div id="game">
 
-  <!-- Players -->
   <div id="p1" class="player"></div>
   <div id="p2" class="player"></div>
   <div id="p3" class="player"></div>
 
-  <!-- Labels -->
   <div id="l1" class="label"></div>
   <div id="l2" class="label"></div>
   <div id="l3" class="label"></div>
@@ -88,15 +86,18 @@ const game = document.getElementById("game");
 const platforms = document.querySelectorAll(".platform");
 
 let players = {
-  p1: {x:60,y:340,vx:0,vy:0},
-  p2: {x:250,y:340,vx:0,vy:0},
-  p3: {x:450,y:340,vx:0,vy:0}
+  p1: {x:60,y:340,vx:0,vy:0,onGround:false},
+  p2: {x:250,y:340,vx:0,vy:0,onGround:false},
+  p3: {x:450,y:340,vx:0,vy:0,onGround:false}
 };
 
 let gravity = 0.7;
 let jump = -13;
 let keys = {};
 let tagger = "p1";
+
+// 🔒 prevents instant re-tag spam
+let tagCooldown = 0;
 
 // prevent scrolling
 document.addEventListener("keydown", e => {
@@ -124,7 +125,7 @@ function move(id, l, r, j) {
   }
 }
 
-// collision
+// platform collision
 function collide(p) {
   p.onGround = false;
 
@@ -171,26 +172,34 @@ function trampoline(p) {
   }
 }
 
-// tag system
+// ✅ FIXED TAG SYSTEM (no green bug)
 function tagCheck() {
+  if (tagCooldown > 0) {
+    tagCooldown--;
+    return;
+  }
+
   let it = players[tagger];
 
-  Object.keys(players).forEach(id => {
-    if (id !== tagger) {
-      let p = players[id];
+  for (let id in players) {
+    if (id === tagger) continue;
 
-      let touching =
-        Math.abs(it.x - p.x) < 30 &&
-        Math.abs(it.y - p.y) < 30;
+    let p = players[id];
 
-      if (touching) {
-        tagger = id;
+    let touching =
+      Math.abs(it.x - p.x) < 30 &&
+      Math.abs(it.y - p.y) < 30;
 
-        document.body.style.background = "#400";
-        setTimeout(() => document.body.style.background = "#111", 100);
-      }
+    if (touching) {
+      tagger = id;
+      tagCooldown = 20; // small delay
+
+      document.body.style.background = "#400";
+      setTimeout(() => document.body.style.background = "#111", 100);
+
+      break; // 🔥 prevents multiple tags in one frame
     }
-  });
+  }
 }
 
 // labels
@@ -203,7 +212,7 @@ function labels() {
   });
 }
 
-// loop
+// game loop
 function update() {
   move("p1","a","d","w");
   move("p2","arrowleft","arrowright","arrowup");
@@ -244,11 +253,11 @@ setInterval(()=>{
   t--;
   document.getElementById("timer").textContent = t;
 
-  if(t<=0){
-    alert("Game Over! Last tagged loses: "+tagger.toUpperCase());
+  if (t <= 0) {
+    alert("Game Over! Last tagged loses: " + tagger.toUpperCase());
     location.reload();
   }
-},1000);
+}, 1000);
 </script>
 
 </body>
