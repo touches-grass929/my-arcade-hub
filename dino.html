@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dino Runner</title>
+
+<style>
+  body {
+    margin: 0;
+    background: #f7f7f7;
+    text-align: center;
+    font-family: Arial;
+  }
+
+  #game {
+    position: relative;
+    width: 750px;
+    height: 200px;
+    margin: 40px auto;
+    background: white;
+    border: 2px solid black;
+    overflow: hidden;
+  }
+
+  #dino {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    background: black;
+    bottom: 0;
+    left: 50px;
+  }
+
+  .duck {
+    height: 20px !important;
+  }
+
+  .obstacle {
+    position: absolute;
+    width: 20px;
+    height: 40px;
+    background: green;
+    bottom: 0;
+  }
+
+  .bird {
+    position: absolute;
+    width: 30px;
+    height: 20px;
+    background: gray;
+  }
+
+  #score {
+    font-size: 20px;
+  }
+</style>
+</head>
+
+<body>
+
+<h2>Dino Runner 🦖</h2>
+Score: <span id="score">0</span>
+
+<div id="game">
+  <div id="dino"></div>
+</div>
+
+<script>
+const dino = document.getElementById("dino");
+const game = document.getElementById("game");
+const scoreEl = document.getElementById("score");
+
+let velocityY = 0;
+let gravity = 1;
+let jumping = false;
+let ducking = false;
+
+let obstacles = [];
+let speed = 6;
+let score = 0;
+let gameOver = false;
+
+// controls
+document.addEventListener("keydown", e => {
+  if (e.code === "Space" && !jumping) {
+    velocityY = -15;
+    jumping = true;
+  }
+
+  if (e.code === "ArrowDown") {
+    ducking = true;
+    dino.classList.add("duck");
+  }
+});
+
+document.addEventListener("keyup", e => {
+  if (e.code === "ArrowDown") {
+    ducking = false;
+    dino.classList.remove("duck");
+  }
+});
+
+// spawn obstacles
+function spawnObstacle() {
+  if (gameOver) return;
+
+  let type = Math.random();
+
+  let obs = document.createElement("div");
+
+  if (type < 0.7) {
+    obs.classList.add("obstacle");
+    obs.style.bottom = "0px";
+  } else {
+    obs.classList.add("bird");
+    obs.style.top = "80px";
+  }
+
+  obs.style.left = "750px";
+  game.appendChild(obs);
+  obstacles.push(obs);
+
+  setTimeout(spawnObstacle, 1000 + Math.random() * 1000);
+}
+
+spawnObstacle();
+
+// collision
+function isColliding(a, b) {
+  let ar = a.getBoundingClientRect();
+  let br = b.getBoundingClientRect();
+
+  return !(
+    ar.top > br.bottom ||
+    ar.bottom < br.top ||
+    ar.right < br.left ||
+    ar.left > br.right
+  );
+}
+
+// game loop
+function update() {
+  if (gameOver) return;
+
+  // gravity
+  velocityY += gravity;
+  let bottom = parseInt(window.getComputedStyle(dino).bottom);
+  bottom -= velocityY;
+
+  if (bottom <= 0) {
+    bottom = 0;
+    jumping = false;
+  }
+
+  dino.style.bottom = bottom + "px";
+
+  // move obstacles
+  obstacles.forEach((obs, i) => {
+    let left = parseInt(obs.style.left);
+    left -= speed;
+    obs.style.left = left + "px";
+
+    // collision
+    if (isColliding(dino, obs)) {
+      gameOver = true;
+      alert("Game Over! Score: " + score);
+      location.reload();
+    }
+
+    // remove off screen
+    if (left < -50) {
+      obs.remove();
+      obstacles.splice(i, 1);
+    }
+  });
+
+  // increase difficulty
+  speed += 0.002;
+
+  // score
+  score++;
+  scoreEl.textContent = score;
+
+  requestAnimationFrame(update);
+}
+
+update();
+</script>
+
+</body>
+</html>
