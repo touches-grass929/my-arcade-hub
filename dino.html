@@ -5,70 +5,90 @@
 <title>Dino Runner</title>
 
 <style>
-  body {
-    margin: 0;
-    background: #f7f7f7;
-    text-align: center;
-    font-family: Arial;
-  }
+body {
+  margin: 0;
+  text-align: center;
+  font-family: Arial;
+  background: #f7f7f7;
+}
 
-  #game {
-    position: relative;
-    width: 750px;
-    height: 200px;
-    margin: 40px auto;
-    background: white;
-    border: 2px solid black;
-    overflow: hidden;
-  }
+#game {
+  position: relative;
+  width: 750px;
+  height: 200px;
+  margin: 40px auto;
+  overflow: hidden;
+  border: 2px solid black;
+  background: #fff;
+  transition: background 0.5s;
+}
 
-  #dino {
-    position: absolute;
-    width: 40px;
-    height: 40px;
-    background: black;
-    bottom: 0;
-    left: 50px;
-  }
+/* Dino */
+#dino {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  bottom: 0;
+  left: 50px;
+  background: url("https://i.imgur.com/6X12Z6B.png") no-repeat center/contain;
+}
 
-  .duck {
-    height: 20px !important;
-  }
+.duck {
+  height: 25px !important;
+}
 
-  .obstacle {
-    position: absolute;
-    width: 20px;
-    height: 40px;
-    background: green;
-    bottom: 0;
-  }
+/* Obstacles */
+.obstacle {
+  position: absolute;
+  width: 25px;
+  height: 50px;
+  bottom: 0;
+  background: url("https://i.imgur.com/t6Y6ZlT.png") no-repeat center/contain;
+}
 
-  .bird {
-    position: absolute;
-    width: 30px;
-    height: 20px;
-    background: gray;
-  }
+.bird {
+  position: absolute;
+  width: 40px;
+  height: 25px;
+  background: url("https://i.imgur.com/9Qx9Q9T.png") no-repeat center/contain;
+}
 
-  #score {
-    font-size: 20px;
-  }
+/* UI */
+#ui {
+  margin-top: 10px;
+  font-size: 18px;
+}
+
+button {
+  margin-top: 10px;
+  padding: 8px 15px;
+  font-size: 16px;
+  cursor: pointer;
+}
 </style>
 </head>
 
 <body>
 
 <h2>Dino Runner 🦖</h2>
-Score: <span id="score">0</span>
+
+<div id="ui">
+  Score: <span id="score">0</span> |
+  High Score: <span id="high">0</span>
+</div>
 
 <div id="game">
   <div id="dino"></div>
 </div>
 
+<button onclick="restartGame()" id="restartBtn" style="display:none;">Restart</button>
+
 <script>
 const dino = document.getElementById("dino");
 const game = document.getElementById("game");
 const scoreEl = document.getElementById("score");
+const highEl = document.getElementById("high");
+const restartBtn = document.getElementById("restartBtn");
 
 let velocityY = 0;
 let gravity = 1;
@@ -80,8 +100,14 @@ let speed = 6;
 let score = 0;
 let gameOver = false;
 
+// load high score
+let highScore = localStorage.getItem("dinoHigh") || 0;
+highEl.textContent = highScore;
+
 // controls
 document.addEventListener("keydown", e => {
+  if (gameOver) return;
+
   if (e.code === "Space" && !jumping) {
     velocityY = -15;
     jumping = true;
@@ -105,7 +131,6 @@ function spawnObstacle() {
   if (gameOver) return;
 
   let type = Math.random();
-
   let obs = document.createElement("div");
 
   if (type < 0.7) {
@@ -113,14 +138,14 @@ function spawnObstacle() {
     obs.style.bottom = "0px";
   } else {
     obs.classList.add("bird");
-    obs.style.top = "80px";
+    obs.style.top = (80 + Math.random()*40) + "px";
   }
 
   obs.style.left = "750px";
   game.appendChild(obs);
   obstacles.push(obs);
 
-  setTimeout(spawnObstacle, 1000 + Math.random() * 1000);
+  setTimeout(spawnObstacle, 900 + Math.random() * 900);
 }
 
 spawnObstacle();
@@ -160,31 +185,64 @@ function update() {
     left -= speed;
     obs.style.left = left + "px";
 
-    // collision
     if (isColliding(dino, obs)) {
-      gameOver = true;
-      alert("Game Over! Score: " + score);
-      location.reload();
+      endGame();
     }
 
-    // remove off screen
-    if (left < -50) {
+    if (left < -60) {
       obs.remove();
       obstacles.splice(i, 1);
     }
   });
 
-  // increase difficulty
+  // difficulty
   speed += 0.002;
 
   // score
   score++;
   scoreEl.textContent = score;
 
+  // 🌗 day/night cycle
+  if (Math.floor(score / 500) % 2 === 1) {
+    game.style.background = "#222";
+  } else {
+    game.style.background = "#fff";
+  }
+
   requestAnimationFrame(update);
 }
 
 update();
+
+function endGame() {
+  gameOver = true;
+
+  // save high score
+  if (score > highScore) {
+    localStorage.setItem("dinoHigh", score);
+    highEl.textContent = score;
+  }
+
+  restartBtn.style.display = "inline-block";
+}
+
+function restartGame() {
+  // reset everything
+  obstacles.forEach(o => o.remove());
+  obstacles = [];
+
+  score = 0;
+  speed = 6;
+  velocityY = 0;
+  gameOver = false;
+
+  dino.style.bottom = "0px";
+
+  restartBtn.style.display = "none";
+
+  spawnObstacle();
+  update();
+}
 </script>
 
 </body>
