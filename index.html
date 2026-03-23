@@ -153,10 +153,17 @@
         <button class="play-btn" onclick="loadGame('dino.html')">Play</button>
       </div>
 
-      <!-- ✅ 3 Player Tag Game -->
       <div class="card">
         <h3>3 Player Tag</h3>
         <button class="play-btn" onclick="loadGame('tag.html')">
+          Play
+        </button>
+      </div>
+
+      <!-- 🐦 Flappy Bird Added -->
+      <div class="card">
+        <h3>Flappy Bird</h3>
+        <button class="play-btn" onclick="loadGame('flappy.html')">
           Play
         </button>
       </div>
@@ -192,7 +199,6 @@
   function loadGame(game) {
     const frame = document.getElementById("gameFrame");
     frame.src = game;
-
     frame.scrollIntoView({ behavior: "smooth" });
   }
 
