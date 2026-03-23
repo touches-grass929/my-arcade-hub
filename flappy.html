@@ -2,16 +2,16 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Flappy Bird Clone</title>
+<title>Flappy Bird</title>
 <style>
   body {
     margin: 0;
-    background: #70c5ce;
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
-    font-family: Arial, sans-serif;
+    background: #70c5ce;
+    font-family: Arial;
   }
   canvas {
     background: #70c5ce;
@@ -28,58 +28,46 @@ const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
 // Bird
-let bird = {
-  x: 80,
-  y: 200,
-  width: 20,
-  height: 20,
-  velocity: 0
-};
-
-let gravity = 0.5;
-let jump = -8;
+let bird = { x: 80, y: 200, vy: 0 };
+const gravity = 0.5;
+const jump = -8;
 
 // Pipes
 let pipes = [];
-let pipeWidth = 60;
-let gap = 120;
+const pipeWidth = 60;
+const gap = 120;
 
-// Game state
+// Score
 let score = 0;
+let highScore = localStorage.getItem("flappyHighScore") || 0;
 let gameOver = false;
 
 // Controls
 document.addEventListener("keydown", () => {
-  if (!gameOver) {
-    bird.velocity = jump;
-  } else {
-    resetGame();
-  }
+  if (!gameOver) bird.vy = jump;
+  else resetGame();
 });
 
 document.addEventListener("click", () => {
-  if (!gameOver) {
-    bird.velocity = jump;
-  } else {
-    resetGame();
-  }
+  if (!gameOver) bird.vy = jump;
+  else resetGame();
 });
 
-// Create pipes
+// Create pipe
 function createPipe() {
-  let topHeight = Math.random() * 250 + 50;
-
+  let top = Math.random() * 250 + 50;
   pipes.push({
     x: canvas.width,
-    top: topHeight,
-    bottom: topHeight + gap
+    top: top,
+    bottom: top + gap,
+    passed: false
   });
 }
 
 // Reset
 function resetGame() {
   bird.y = 200;
-  bird.velocity = 0;
+  bird.vy = 0;
   pipes = [];
   score = 0;
   gameOver = false;
@@ -90,34 +78,44 @@ function update() {
   if (gameOver) return;
 
   // Bird physics
-  bird.velocity += gravity;
-  bird.y += bird.velocity;
+  bird.vy += gravity;
+  bird.y += bird.vy;
 
-  // Pipes movement
+  // Pipes
   pipes.forEach(pipe => {
     pipe.x -= 3;
 
-    // Score
-    if (pipe.x + pipeWidth === bird.x) {
+    // Score when passing pipe
+    if (!pipe.passed && pipe.x + pipeWidth < bird.x) {
       score++;
+      pipe.passed = true;
     }
 
     // Collision
     if (
       bird.x < pipe.x + pipeWidth &&
-      bird.x + bird.width > pipe.x &&
-      (bird.y < pipe.top || bird.y + bird.height > pipe.bottom)
+      bird.x + 20 > pipe.x &&
+      (bird.y < pipe.top || bird.y + 20 > pipe.bottom)
     ) {
-      gameOver = true;
+      endGame();
     }
   });
 
-  // Remove off-screen pipes
   pipes = pipes.filter(p => p.x + pipeWidth > 0);
 
-  // Ground / ceiling collision
-  if (bird.y + bird.height > canvas.height || bird.y < 0) {
-    gameOver = true;
+  // Ground / ceiling
+  if (bird.y > canvas.height || bird.y < 0) {
+    endGame();
+  }
+}
+
+// Game over
+function endGame() {
+  gameOver = true;
+
+  if (score > highScore) {
+    highScore = score;
+    localStorage.setItem("flappyHighScore", highScore);
   }
 }
 
@@ -127,36 +125,35 @@ function draw() {
 
   // Bird
   ctx.fillStyle = "yellow";
-  ctx.fillRect(bird.x, bird.y, bird.width, bird.height);
+  ctx.fillRect(bird.x, bird.y, 20, 20);
 
   // Pipes
   ctx.fillStyle = "green";
   pipes.forEach(pipe => {
-    // Top pipe
     ctx.fillRect(pipe.x, 0, pipeWidth, pipe.top);
-    // Bottom pipe
     ctx.fillRect(pipe.x, pipe.bottom, pipeWidth, canvas.height);
   });
 
-  // Score
+  // Scoreboard
   ctx.fillStyle = "black";
   ctx.font = "20px Arial";
   ctx.fillText("Score: " + score, 10, 30);
+  ctx.fillText("High Score: " + highScore, 10, 60);
 
   if (gameOver) {
     ctx.fillStyle = "red";
     ctx.font = "30px Arial";
-    ctx.fillText("GAME OVER", 90, 250);
+    ctx.fillText("GAME OVER", 100, 300);
     ctx.font = "16px Arial";
-    ctx.fillText("Click or Press Key to Restart", 70, 300);
+    ctx.fillText("Click or Press Key to Restart", 80, 340);
   }
 }
 
 // Loop
-function gameLoop() {
+function loop() {
   update();
   draw();
-  requestAnimationFrame(gameLoop);
+  requestAnimationFrame(loop);
 }
 
 // Spawn pipes
@@ -164,7 +161,7 @@ setInterval(() => {
   if (!gameOver) createPipe();
 }, 1500);
 
-gameLoop();
+loop();
 </script>
 
 </body>
